@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MenuStackParamList } from "./MenuScreen";
