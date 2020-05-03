@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "react-native";
+import { Button, View } from "react-native";
 import {
   RouteProp,
   CompositeNavigationProp,
@@ -12,7 +12,7 @@ import {
 } from "@react-navigation/stack";
 import { RootStackParamList } from "../App";
 import { AboutScreen } from "./AboutScreen";
-import { SafeAreaView } from "../design-system/SafeAreaView";
+import { BackgroundView } from "../design-system/BackgroundView";
 import { ActionButton } from "../components/ActionButton";
 
 export type MenuStackParamList = {
@@ -42,30 +42,35 @@ type Props = {
 
 function MenuScreenComponent({ navigation }: Props) {
   return (
-    <SafeAreaView>
+    <BackgroundView>
       <Button
         title="Go to about"
         onPress={() => navigation.navigate("About")}
       />
-    </SafeAreaView>
+      <ActionButton
+        label="✕"
+        backgroundColor="white"
+        onPress={() => navigation.goBack()}
+      />
+    </BackgroundView>
   );
 }
 
 export function MenuScreen() {
-  const navigation = useNavigation();
-
   return (
     <>
       <Stack.Navigator
         initialRouteName="Menu"
         screenOptions={{
           headerStatusBarHeight: 0,
+          headerStyle: {
+            height: 0,
+          },
           header: () => null,
         }}>
         <Stack.Screen name="Menu" component={MenuScreenComponent} />
         <Stack.Screen name="About" component={AboutScreen} />
       </Stack.Navigator>
-      <ActionButton label="←" onPress={() => navigation.navigate("Menu")} />
     </>
   );
 }

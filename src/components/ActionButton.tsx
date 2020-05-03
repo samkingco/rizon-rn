@@ -10,7 +10,7 @@ export interface ActionButtonProps {
 }
 
 export function ActionButton({
-  backgroundColor = "white",
+  backgroundColor = "accent",
   ...props
 }: ActionButtonProps) {
   const buttonStyles = StyleSheet.flatten([
@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     justifyContent: "center",
+    alignContent: "center",
     position: "absolute",
     bottom: 40,
     left: 16,
