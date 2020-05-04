@@ -131,7 +131,7 @@ export function Clock(props: ClockProps) {
 
   const numOfPips = 24 * 8;
   const pipAngles = Array.from(new Array(numOfPips)).map(
-    (_, index) => (360 / numOfPips) * index,
+    (_, index) => (360 / numOfPips) * index - 180,
   );
 
   const closestPipToNow = pipAngles.reduce(function (prev, curr) {
