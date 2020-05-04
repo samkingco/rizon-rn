@@ -116,7 +116,7 @@ export function HomeScreen({ navigation }: Props) {
           </View>
           <View style={styles.timeRow}>
             <Subhead>{format(currentTime, "dd MMM, yyyy")}</Subhead>
-            <Subhead>+3hr 13m</Subhead>
+            <Subhead>+0hr 0m</Subhead>
           </View>
         </ContentBlock>
         <ContentBlock>

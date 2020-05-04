@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, Dimensions, PanResponder } from "react-native";
 import Svg, { Path, Circle, Line } from "react-native-svg";
 import { useCurrentTime } from "../hooks/useCurrentTime";
 import { SunTimings } from "../hooks/useSunTimings";
@@ -17,6 +17,19 @@ function polarToCartesian(
     x: centerX + radius * Math.cos(angleInRadians),
     y: centerY + radius * Math.sin(angleInRadians),
   };
+}
+
+function cartesianToPolar(x: number, y: number, radius: number) {
+  if (x === 0) {
+    return y > radius ? 0 : 180;
+  } else if (y === 0) {
+    return x > radius ? 90 : 270;
+  } else {
+    return (
+      Math.round((Math.atan((y - radius) / (x - radius)) * 180) / Math.PI) +
+      (x > radius ? 90 : 270)
+    );
+  }
 }
 
 function describeArc(
@@ -69,10 +82,32 @@ interface ClockProps {
 }
 
 export function Clock(props: ClockProps) {
-  const currentTime = useCurrentTime({ updateFrequency: 1000 });
-
   const strokeWidth = 2;
   const r = (size - strokeWidth) / 2;
+
+  const currentTime = useCurrentTime({ updateFrequency: 1000 });
+  const angleForNow = getAngleForTime(currentTime);
+  const [rotationAngle, setRotationAngle] = useState(angleForNow);
+
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: (e, gs) => true,
+      onStartShouldSetPanResponderCapture: (e, gs) => true,
+      onMoveShouldSetPanResponder: (e, gs) => true,
+      onMoveShouldSetPanResponderCapture: (e, gs) => true,
+      onPanResponderMove: (e, gs) => {
+        let a = cartesianToPolar(gs.moveX - cx, gs.moveY - cy, r);
+
+        // if (a <= 0) {
+        //   setRotationAngle(0);
+        // } else if (a >= 359) {
+        //   setRotationAngle(359);
+        // } else {
+        // }
+        setRotationAngle(a);
+      },
+    }),
+  ).current;
 
   const { sunTimings } = props;
 
@@ -99,8 +134,6 @@ export function Clock(props: ClockProps) {
     (_, index) => (360 / numOfPips) * index,
   );
 
-  const angleForNow = getAngleForTime(currentTime);
-
   const closestPipToNow = pipAngles.reduce(function (prev, curr) {
     return Math.abs(curr - angleForNow) < Math.abs(prev - angleForNow)
       ? curr
@@ -108,7 +141,7 @@ export function Clock(props: ClockProps) {
   });
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.wrapper} {...panResponder.panHandlers}>
       <Svg width={size} height={size}>
         {pipAngles.map((angle, index) => (
           <Line
@@ -134,7 +167,7 @@ export function Clock(props: ClockProps) {
           y2={cy}
           strokeWidth={2}
           stroke={theme.colors.clock.daylight}
-          transform={{ rotation: angleForNow, originX: cx, originY: cy }}
+          transform={{ rotation: rotationAngle, originX: cx, originY: cy }}
         />
         <Circle
           fill="none"
