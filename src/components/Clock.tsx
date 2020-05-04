@@ -73,9 +73,9 @@ function getAngleForTime(timestamp: number) {
 }
 
 const { width } = Dimensions.get("window");
-const size = width - 48;
-const cx = size / 2;
-const cy = size / 2;
+const size = width - 64;
+const centerX = size / 2;
+const centerY = size / 2;
 
 interface ClockProps {
   sunTimings: SunTimings;
@@ -83,7 +83,7 @@ interface ClockProps {
 
 export function Clock(props: ClockProps) {
   const strokeWidth = 2;
-  const r = (size - strokeWidth) / 2;
+  const radius = (size - strokeWidth) / 2;
 
   const currentTime = useCurrentTime({ updateFrequency: 1000 });
   const angleForNow = getAngleForTime(currentTime);
@@ -96,14 +96,12 @@ export function Clock(props: ClockProps) {
       onMoveShouldSetPanResponder: (e, gs) => true,
       onMoveShouldSetPanResponderCapture: (e, gs) => true,
       onPanResponderMove: (e, gs) => {
-        let a = cartesianToPolar(gs.moveX - cx, gs.moveY - cy, r);
+        let a = cartesianToPolar(
+          gs.moveX - centerX,
+          gs.moveY - centerY,
+          radius,
+        );
 
-        // if (a <= 0) {
-        //   setRotationAngle(0);
-        // } else if (a >= 359) {
-        //   setRotationAngle(359);
-        // } else {
-        // }
         setRotationAngle(a);
       },
     }),
@@ -113,23 +111,35 @@ export function Clock(props: ClockProps) {
 
   const twilightArcStart = getAngleForTime(sunTimings.twilightAM.start);
   const twilightArcEnd = getAngleForTime(sunTimings.twilightPM.end);
-  const twilightArc = describeArc(cx, cy, r, twilightArcStart, twilightArcEnd);
+  const twilightArc = describeArc(
+    centerX,
+    centerY,
+    radius,
+    twilightArcStart,
+    twilightArcEnd,
+  );
 
   const goldenHourArcStart = getAngleForTime(sunTimings.goldenHourAM.start);
   const goldenHourArcEnd = getAngleForTime(sunTimings.goldenHourPM.end);
   const goldenHourArc = describeArc(
-    cx,
-    cy,
-    r,
+    centerX,
+    centerY,
+    radius,
     goldenHourArcStart,
     goldenHourArcEnd,
   );
 
   const daylightArcStart = getAngleForTime(sunTimings.goldenHourAM.end);
   const daylightArcEnd = getAngleForTime(sunTimings.goldenHourPM.start);
-  const daylightArc = describeArc(cx, cy, r, daylightArcStart, daylightArcEnd);
+  const daylightArc = describeArc(
+    centerX,
+    centerY,
+    radius,
+    daylightArcStart,
+    daylightArcEnd,
+  );
 
-  const numOfPips = 24 * 8;
+  const numOfPips = 24 * 6;
   const pipAngles = Array.from(new Array(numOfPips)).map(
     (_, index) => (360 / numOfPips) * index - 180,
   );
@@ -153,29 +163,33 @@ export function Clock(props: ClockProps) {
                 : theme.colors.clock.background
             }
             strokeWidth={2}
-            x1={cx}
+            x1={centerX}
             y1="6"
-            x2={cx}
+            x2={centerX}
             y2="10"
-            transform={{ rotation: angle, originX: cx, originY: cy }}
+            transform={{ rotation: angle, originX: centerX, originY: centerY }}
           />
         ))}
         <Line
-          x1={cx}
+          x1={centerX}
           y1="16"
-          x2={cx}
-          y2={cy}
+          x2={centerX}
+          y2={centerY}
           strokeWidth={2}
           stroke={theme.colors.clock.daylight}
-          transform={{ rotation: rotationAngle, originX: cx, originY: cy }}
+          transform={{
+            rotation: rotationAngle,
+            originX: centerX,
+            originY: centerY,
+          }}
         />
         <Circle
           fill="none"
           stroke={theme.colors.clock.background}
           strokeWidth={strokeWidth}
-          cx={cx}
-          cy={cy}
-          r={r}
+          cx={centerX}
+          cy={centerY}
+          r={radius}
         />
         <Path
           fill="none"
@@ -209,8 +223,8 @@ const styles = StyleSheet.create({
   pipWrapper: {
     transform: [
       { rotate: "-90deg" },
-      { translateX: cx * -1 },
-      { translateY: cy * -1 },
+      { translateX: centerX * -1 },
+      { translateY: centerY * -1 },
     ],
   },
   pip: {
