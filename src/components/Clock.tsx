@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Dimensions, PanResponder } from "react-native";
+import { View, Dimensions, PanResponder } from "react-native";
 import Svg, { Path, Circle, Line } from "react-native-svg";
 import { useCurrentTime } from "../hooks/useCurrentTime";
 import { SunTimings } from "../hooks/useSunTimings";
@@ -151,7 +151,7 @@ export function Clock(props: ClockProps) {
   });
 
   return (
-    <View style={styles.wrapper} {...panResponder.panHandlers}>
+    <View {...panResponder.panHandlers}>
       <Svg width={size} height={size}>
         {pipAngles.map((angle, index) => (
           <Line
@@ -213,26 +213,3 @@ export function Clock(props: ClockProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    width: size,
-    height: size,
-    position: "relative",
-  },
-  pipWrapper: {
-    transform: [
-      { rotate: "-90deg" },
-      { translateX: centerX * -1 },
-      { translateY: centerY * -1 },
-    ],
-  },
-  pip: {
-    width: 4,
-    marginLeft: -2,
-    height: 2,
-    marginTop: -1,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    position: "absolute",
-  },
-});
