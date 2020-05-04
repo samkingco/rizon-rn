@@ -1,13 +1,14 @@
 import React from "react";
-import { NavigationContainer, useNavigation } from "@react-navigation/native";
+import { Provider } from "react-redux";
+import { StatusBar } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
 import {
   createStackNavigator,
   TransitionPresets,
 } from "@react-navigation/stack";
 import { HomeScreen } from "./screens/HomeScreen";
 import { MenuScreen } from "./screens/MenuScreen";
-import { StatusBar } from "react-native";
-import { MenuButton } from "./components/MenuButton";
+import { store } from "./store";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -18,30 +19,32 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export const App = () => {
   return (
-    <NavigationContainer>
-      <StatusBar barStyle="light-content" />
-      <Stack.Navigator
-        initialRouteName="Home"
-        headerMode="screen"
-        screenOptions={{
-          gestureEnabled: true,
-          cardOverlayEnabled: true,
-        }}>
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ header: () => null }}
-        />
-        <Stack.Screen
-          name="Menu"
-          component={MenuScreen}
-          options={{
-            ...TransitionPresets.ModalPresentationIOS,
-            header: () => null,
-            headerStatusBarHeight: 0,
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
+        <StatusBar barStyle="light-content" />
+        <Stack.Navigator
+          initialRouteName="Home"
+          headerMode="screen"
+          screenOptions={{
+            gestureEnabled: true,
+            cardOverlayEnabled: true,
+          }}>
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{ header: () => null }}
+          />
+          <Stack.Screen
+            name="Menu"
+            component={MenuScreen}
+            options={{
+              ...TransitionPresets.ModalPresentationIOS,
+              header: () => null,
+              headerStatusBarHeight: 0,
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 };

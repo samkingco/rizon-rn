@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import SunCalc from "suncalc";
 
 SunCalc.addTime(-4, "RZGoldenHourAMStart", "RZGoldenHourPMEnd");
@@ -19,67 +18,68 @@ interface CustomTimes extends SunCalc.GetTimesResult {
 }
 
 interface Time {
-  start: Date;
-  end: Date;
+  start: number;
+  end: number;
 }
 
-interface Timings {
+interface SunTimings {
   twilightAM: Time;
   goldenHourAM: Time;
   sunrise: Time;
-  solarNoon: Date;
+  solarNoon: number;
   sunset: Time;
   goldenHourPM: Time;
   twilightPM: Time;
 }
 
 export function getSunTimings(
-  date = new Date(),
+  timestamp: number,
   latitude = 51.24,
   longitude = -0.5821,
-): Timings {
+): SunTimings {
+  const date = new Date(timestamp);
   const times = SunCalc.getTimes(date, latitude, longitude) as CustomTimes;
 
   return {
     twilightAM: {
-      start: times.RZTwilightAMStart,
-      end: times.RZTwilightAMEnd,
+      start: times.RZTwilightAMStart.getTime(),
+      end: times.RZTwilightAMEnd.getTime(),
     },
     goldenHourAM: {
-      start: times.RZGoldenHourAMStart,
-      end: times.RZGoldenHourAMEnd,
+      start: times.RZGoldenHourAMStart.getTime(),
+      end: times.RZGoldenHourAMEnd.getTime(),
     },
     sunrise: {
-      start: times.sunrise,
-      end: times.sunriseEnd,
+      start: times.sunrise.getTime(),
+      end: times.sunriseEnd.getTime(),
     },
-    solarNoon: times.solarNoon,
+    solarNoon: times.solarNoon.getTime(),
     sunset: {
-      start: times.sunsetStart,
-      end: times.sunset,
+      start: times.sunsetStart.getTime(),
+      end: times.sunset.getTime(),
     },
     goldenHourPM: {
-      start: times.RZGoldenHourPMStart,
-      end: times.RZGoldenHourPMEnd,
+      start: times.RZGoldenHourPMStart.getTime(),
+      end: times.RZGoldenHourPMEnd.getTime(),
     },
     twilightPM: {
-      start: times.RZTwilightPMStart,
-      end: times.RZTwilightPMEnd,
+      start: times.RZTwilightPMStart.getTime(),
+      end: times.RZTwilightPMEnd.getTime(),
     },
   };
 }
 
-export function useSunTimings(
-  date: Date,
-  latitude: number,
-  longitude: number,
-): Timings {
-  const sunTimings = getSunTimings(date, latitude, longitude);
-  const [timings, setTimings] = useState<Timings>(sunTimings);
+// export function useSunTimings(
+//   date: number,
+//   latitude: number,
+//   longitude: number,
+// ): SunTimings {
+//   const sunTimings = getSunTimings(date, latitude, longitude);
+//   const [timings, setTimings] = useState<SunTimings>(sunTimings);
 
-  useEffect(() => {
-    setTimings(getSunTimings(date, latitude, longitude));
-  }, [date, latitude, longitude]);
+//   useEffect(() => {
+//     setTimings(getSunTimings(date, latitude, longitude));
+//   }, [date, latitude, longitude]);
 
-  return timings;
-}
+//   return timings;
+// }

@@ -8,11 +8,11 @@ interface GeolocationData {
   longitude: number;
 }
 
-export const useGeolocation = (): [
-  GeolocationData,
-  boolean,
-  string | undefined,
-] => {
+export const useGeolocation = (): {
+  liveLocation: GeolocationData;
+  isLoading: boolean;
+  error: string | undefined;
+} => {
   const notFoundName = "Unknown location";
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
@@ -60,5 +60,5 @@ export const useGeolocation = (): [
     return () => Geolocation.clearWatch(watchId);
   }, []);
 
-  return [position, isLoading, error];
+  return { liveLocation: position, isLoading, error };
 };

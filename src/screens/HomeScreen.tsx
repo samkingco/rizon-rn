@@ -1,4 +1,5 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import { StyleSheet, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -12,6 +13,8 @@ import { Subhead } from "../design-system/Subhead";
 import { MenuButton } from "../components/MenuButton";
 import { getSunTimings } from "../hooks/useSunTimings";
 import { useGeolocation } from "../hooks/useGeolocation";
+import { sunSettingsSelectors } from "../store/sun-settings";
+import { savedLocationSelectors } from "../store/saved-locations";
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
@@ -23,22 +26,42 @@ type Props = {
 
 interface TimeRow {
   name: string;
-  start: Date;
-  end?: Date;
+  start: number;
+  end?: number;
 }
 
 export function HomeScreen({ navigation }: Props) {
-  const [position, isLoadingPosition, positionError] = useGeolocation();
+  const { liveLocation } = useGeolocation();
 
-  const times = getSunTimings(
-    new Date(),
-    position.latitude,
-    position.longitude,
+  const {
+    useLiveLocation,
+    selectedSavedLocationId,
+    selectedDateTimestamp,
+  } = useSelector(sunSettingsSelectors.getSettings);
+
+  const selectedSavedLocation = useSelector((s) =>
+    savedLocationSelectors.byId(s, selectedSavedLocationId || ""),
   );
 
+  const location =
+    !useLiveLocation && selectedSavedLocation
+      ? selectedSavedLocation
+      : liveLocation;
+
+  const sunTimings = getSunTimings(
+    selectedDateTimestamp,
+    location.latitude,
+    location.longitude,
+  );
+
+  // const timeFormat = "yyyy-MM-dd'T'HH:mm xxx";
+  const timeFormat = "HH:mm";
+
+  const currentTime = new Date();
+
   const goldenHourLength = differenceInMilliseconds(
-    times.goldenHourAM.end,
-    times.goldenHourAM.start,
+    sunTimings.goldenHourAM.end,
+    sunTimings.goldenHourAM.start,
   );
 
   const formattedGoldenHourLength = format(goldenHourLength, "h'H' M'M'");
@@ -46,60 +69,58 @@ export function HomeScreen({ navigation }: Props) {
   const AMTimes: TimeRow[] = [
     {
       name: "Twilight",
-      ...times.twilightAM,
+      ...sunTimings.twilightAM,
     },
     {
       name: "Sunrise",
-      start: times.sunrise.start,
+      start: sunTimings.sunrise.start,
     },
     {
       name: "Golden hour",
-      ...times.goldenHourAM,
+      ...sunTimings.goldenHourAM,
     },
   ];
 
   const PMTimes: TimeRow[] = [
     {
       name: "Golden hour",
-      ...times.goldenHourPM,
+      ...sunTimings.goldenHourPM,
     },
     {
       name: "Sunset",
-      start: times.sunset.end,
+      start: sunTimings.sunset.end,
     },
     {
       name: "Twilight",
-      ...times.twilightPM,
+      ...sunTimings.twilightPM,
     },
   ];
 
   return (
     <SafeAreaView>
       <ContentBlock>
-        <Title>{position.name}</Title>
+        <Title>{location.name}</Title>
         <Subhead>
-          {positionError
-            ? "Couldn't get your location"
-            : `${position.latitude.toFixed(2)}°N ${position.longitude.toFixed(
-                2,
-              )}°W`}
+          {`${location.latitude.toFixed(2)}°N ${location.longitude.toFixed(
+            2,
+          )}°W`}
         </Subhead>
       </ContentBlock>
       <ContentBlock>
         <View style={styles.timeRow}>
-          <Headline>Thursday</Headline>
-          <Headline>19:21</Headline>
+          <Headline>{format(currentTime, "cccc")}</Headline>
+          <Headline>{format(currentTime, timeFormat)}</Headline>
         </View>
         <View style={styles.timeRow}>
-          <Subhead>24 Jun, 2018</Subhead>
+          <Subhead>{format(currentTime, "dd MMM, yyyy")}</Subhead>
           <Subhead>+3hr 13m</Subhead>
         </View>
       </ContentBlock>
       <ContentBlock>
         <Headline color="accent">Golden hour</Headline>
         <Subhead>
-          {format(times.goldenHourAM.start, "HH:mm")} –{" "}
-          {format(times.goldenHourAM.end, "HH:mm")}
+          {format(sunTimings.goldenHourAM.start, timeFormat)} –{" "}
+          {format(sunTimings.goldenHourAM.end, timeFormat)}
         </Subhead>
         <Subhead>{formattedGoldenHourLength}</Subhead>
       </ContentBlock>
@@ -108,8 +129,8 @@ export function HomeScreen({ navigation }: Props) {
           <React.Fragment key={`AM_${time.name}`}>
             <Headline>{time.name}</Headline>
             <Subhead>
-              {format(time.start, "HH:mm")}
-              {time.end ? ` – ${format(time.end, "HH:mm")}` : null}
+              {format(time.start, timeFormat)}
+              {time.end ? ` – ${format(time.end, timeFormat)}` : null}
             </Subhead>
           </React.Fragment>
         ))}
@@ -117,8 +138,8 @@ export function HomeScreen({ navigation }: Props) {
           <React.Fragment key={`PM_${time.name}`}>
             <Headline>{time.name}</Headline>
             <Subhead>
-              {format(time.start, "HH:mm")}
-              {time.end ? ` – ${format(time.end, "HH:mm")}` : null}
+              {format(time.start, timeFormat)}
+              {time.end ? ` – ${format(time.end, timeFormat)}` : null}
             </Subhead>
           </React.Fragment>
         ))}
