@@ -22,7 +22,7 @@ interface Time {
   end: number;
 }
 
-interface SunTimings {
+export interface SunTimings {
   twilightAM: Time;
   goldenHourAM: Time;
   sunrise: Time;

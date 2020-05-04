@@ -10,7 +10,7 @@ export interface ActionButtonProps {
 }
 
 export function ActionButton({
-  backgroundColor = "accent",
+  backgroundColor = "goldenHour",
   ...props
 }: ActionButtonProps) {
   const buttonStyles = StyleSheet.flatten([
@@ -20,7 +20,7 @@ export function ActionButton({
 
   return (
     <TouchableOpacity style={buttonStyles} {...props}>
-      <Subhead color={backgroundColor === "white" ? "accent" : "default"}>
+      <Subhead color={backgroundColor === "white" ? "goldenHour" : "default"}>
         {props.label}
       </Subhead>
     </TouchableOpacity>

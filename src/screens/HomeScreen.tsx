@@ -15,6 +15,8 @@ import { getSunTimings } from "../hooks/useSunTimings";
 import { useGeolocation } from "../hooks/useGeolocation";
 import { sunSettingsSelectors } from "../store/sun-settings";
 import { savedLocationSelectors } from "../store/saved-locations";
+import { Clock } from "../components/Clock";
+import { ScrollView } from "react-native-gesture-handler";
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
@@ -98,52 +100,57 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView>
-      <ContentBlock>
-        <Title>{location.name}</Title>
-        <Subhead>
-          {`${location.latitude.toFixed(2)}°N ${location.longitude.toFixed(
-            2,
-          )}°W`}
-        </Subhead>
-      </ContentBlock>
-      <ContentBlock>
-        <View style={styles.timeRow}>
-          <Headline>{format(currentTime, "cccc")}</Headline>
-          <Headline>{format(currentTime, timeFormat)}</Headline>
-        </View>
-        <View style={styles.timeRow}>
-          <Subhead>{format(currentTime, "dd MMM, yyyy")}</Subhead>
-          <Subhead>+3hr 13m</Subhead>
-        </View>
-      </ContentBlock>
-      <ContentBlock>
-        <Headline color="accent">Golden hour</Headline>
-        <Subhead>
-          {format(sunTimings.goldenHourAM.start, timeFormat)} –{" "}
-          {format(sunTimings.goldenHourAM.end, timeFormat)}
-        </Subhead>
-        <Subhead>{formattedGoldenHourLength}</Subhead>
-      </ContentBlock>
-      <ContentBlock>
-        {AMTimes.map((time) => (
-          <React.Fragment key={`AM_${time.name}`}>
-            <Headline>{time.name}</Headline>
-            <Subhead>
-              {format(time.start, timeFormat)}
-              {time.end ? ` – ${format(time.end, timeFormat)}` : null}
-            </Subhead>
-          </React.Fragment>
-        ))}
-        {PMTimes.map((time) => (
-          <React.Fragment key={`PM_${time.name}`}>
-            <Headline>{time.name}</Headline>
-            <Subhead>
-              {format(time.start, timeFormat)}
-              {time.end ? ` – ${format(time.end, timeFormat)}` : null}
-            </Subhead>
-          </React.Fragment>
-        ))}
-      </ContentBlock>
+      <ScrollView>
+        <ContentBlock>
+          <Title>{location.name}</Title>
+          <Subhead>
+            {`${location.latitude.toFixed(2)}°N ${location.longitude.toFixed(
+              2,
+            )}°W`}
+          </Subhead>
+        </ContentBlock>
+        <ContentBlock>
+          <View style={styles.timeRow}>
+            <Headline>{format(currentTime, "cccc")}</Headline>
+            <Headline>{format(currentTime, timeFormat)}</Headline>
+          </View>
+          <View style={styles.timeRow}>
+            <Subhead>{format(currentTime, "dd MMM, yyyy")}</Subhead>
+            <Subhead>+3hr 13m</Subhead>
+          </View>
+        </ContentBlock>
+        <ContentBlock>
+          <Clock sunTimings={sunTimings} />
+        </ContentBlock>
+        <ContentBlock>
+          <Headline color="goldenHour">Golden hour</Headline>
+          <Subhead>
+            {format(sunTimings.goldenHourAM.start, timeFormat)} –{" "}
+            {format(sunTimings.goldenHourAM.end, timeFormat)}
+          </Subhead>
+          <Subhead>{formattedGoldenHourLength}</Subhead>
+        </ContentBlock>
+        <ContentBlock>
+          {AMTimes.map((time) => (
+            <React.Fragment key={`AM_${time.name}`}>
+              <Headline>{time.name}</Headline>
+              <Subhead>
+                {format(time.start, timeFormat)}
+                {time.end ? ` – ${format(time.end, timeFormat)}` : null}
+              </Subhead>
+            </React.Fragment>
+          ))}
+          {PMTimes.map((time) => (
+            <React.Fragment key={`PM_${time.name}`}>
+              <Headline>{time.name}</Headline>
+              <Subhead>
+                {format(time.start, timeFormat)}
+                {time.end ? ` – ${format(time.end, timeFormat)}` : null}
+              </Subhead>
+            </React.Fragment>
+          ))}
+        </ContentBlock>
+      </ScrollView>
       <MenuButton label="⌘" onPress={() => navigation.navigate("Menu")} />
     </SafeAreaView>
   );
