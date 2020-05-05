@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Dimensions, PanResponder } from "react-native";
 import Svg, { Path, Circle, Line } from "react-native-svg";
 import { useCurrentTime } from "../hooks/useCurrentTime";
 import { SunTimings } from "../hooks/useSunTimings";
 import { theme } from "../theme";
+
+function radiansToDegrees(radians: number) {
+  return (
+    ((radians > 0 ? radians : 2 * Math.PI + radians) * 360) / (2 * Math.PI)
+  );
+}
 
 function polarToCartesian(
   centerX: number,
@@ -17,19 +23,6 @@ function polarToCartesian(
     x: centerX + radius * Math.cos(angleInRadians),
     y: centerY + radius * Math.sin(angleInRadians),
   };
-}
-
-function cartesianToPolar(x: number, y: number, radius: number) {
-  if (x === 0) {
-    return y > radius ? 0 : 180;
-  } else if (y === 0) {
-    return x > radius ? 90 : 270;
-  } else {
-    return (
-      Math.round((Math.atan((y - radius) / (x - radius)) * 180) / Math.PI) +
-      (x > radius ? 90 : 270)
-    );
-  }
 }
 
 function describeArc(
@@ -73,12 +66,17 @@ function getAngleForTime(timestamp: number) {
 }
 
 const { width } = Dimensions.get("window");
-const size = width - 64;
+const size = width - 32;
 const centerX = size / 2;
 const centerY = size / 2;
 
 interface ClockProps {
   sunTimings: SunTimings;
+}
+
+enum ClockStatus {
+  IDLE = "IDLE",
+  ROTATING = "ROTATING",
 }
 
 export function Clock(props: ClockProps) {
@@ -87,25 +85,63 @@ export function Clock(props: ClockProps) {
 
   const currentTime = useCurrentTime({ updateFrequency: 1000 });
   const angleForNow = getAngleForTime(currentTime);
-  const [rotationAngle, setRotationAngle] = useState(angleForNow);
+
+  const clockViewRef = useRef<View>(null);
+  const [clockPos, setClockPos] = useState({ x: 0, y: 0 });
+  const [rotationStatus, setRotationStatus] = useState(ClockStatus.IDLE);
+  const [idleRotation, setIdleRotation] = useState(angleForNow);
+  const [rotation, setRotation] = useState(angleForNow);
+  const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
+  const [currentCoords, setCurrentCoords] = useState({ x: 0, y: 0 });
+
+  const startDeg = radiansToDegrees(
+    Math.atan2(startCoords.x - clockPos.x, startCoords.y - clockPos.y),
+  );
+
+  const currentDeg = radiansToDegrees(
+    Math.atan2(currentCoords.x - clockPos.x, currentCoords.y - clockPos.y),
+  );
+
+  const degreesDifference = startDeg - currentDeg;
+
+  useEffect(() => {
+    setRotation(idleRotation + degreesDifference);
+  }, [degreesDifference]);
+
+  useEffect(() => {
+    if (rotationStatus === ClockStatus.IDLE) {
+      setIdleRotation(rotation);
+    }
+  }, [rotationStatus, rotation]);
 
   const panResponder = React.useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: (e, gs) => true,
-      onStartShouldSetPanResponderCapture: (e, gs) => true,
-      onMoveShouldSetPanResponder: (e, gs) => true,
-      onMoveShouldSetPanResponderCapture: (e, gs) => true,
-      onPanResponderMove: (e, gs) => {
-        let a = cartesianToPolar(
-          gs.moveX - centerX,
-          gs.moveY - centerY,
-          radius,
-        );
-
-        setRotationAngle(a);
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderGrant: (e, gestureState) => {
+        setRotationStatus(ClockStatus.ROTATING);
+        setStartCoords({ x: gestureState.x0, y: gestureState.y0 });
+      },
+      onPanResponderMove: (e, gestureState) => {
+        setCurrentCoords({ x: gestureState.moveX, y: gestureState.moveY });
+      },
+      onPanResponderRelease: (e, gestureState) => {
+        setRotationStatus(ClockStatus.IDLE);
       },
     }),
   ).current;
+
+  useEffect(() => {
+    if (!clockViewRef.current) {
+      return;
+    }
+
+    clockViewRef.current.measure((x, y, width, height, pageX, pageY) => {
+      setClockPos({
+        x: pageX + width / 2,
+        y: pageY + height / 2,
+      });
+    });
+  }, [clockViewRef.current]);
 
   const { sunTimings } = props;
 
@@ -151,11 +187,11 @@ export function Clock(props: ClockProps) {
   });
 
   return (
-    <View {...panResponder.panHandlers}>
+    <View ref={clockViewRef} {...panResponder.panHandlers}>
       <Svg width={size} height={size}>
-        {pipAngles.map((angle, index) => (
+        {pipAngles.map((pipAngle, index) => (
           <Line
-            key={angle}
+            key={pipAngle}
             fill="none"
             stroke={
               index === pipAngles.indexOf(closestPipToNow)
@@ -167,7 +203,11 @@ export function Clock(props: ClockProps) {
             y1="6"
             x2={centerX}
             y2="10"
-            transform={{ rotation: angle, originX: centerX, originY: centerY }}
+            transform={{
+              rotation: pipAngle,
+              originX: centerX,
+              originY: centerY,
+            }}
           />
         ))}
         <Line
@@ -178,7 +218,7 @@ export function Clock(props: ClockProps) {
           strokeWidth={2}
           stroke={theme.colors.clock.daylight}
           transform={{
-            rotation: rotationAngle,
+            rotation,
             originX: centerX,
             originY: centerY,
           }}
